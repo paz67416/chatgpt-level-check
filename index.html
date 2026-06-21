@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChatGPT使い方レベル診断</title>
+<meta name="description" content="あなたがChatGPTとどんな距離感で付き合っているかを8つの質問で診断します。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EEF1E8;
+    --paper-soft:#F6F8F1;
+    --ink:#2A2E27;
+    --ink-soft:#5B6157;
+    --line:#D6D9CC;
+    --accent:#8B5A6B;     /* mauve - signature accent */
+    --accent2:#4F7163;    /* sage - fill / CTA */
+    --accent2-dark:#3C5A4F;
+    --type-s:#6E89A3;
+    --type-d:#C98A46;
+    --type-w:#4F7163;
+    --type-k:#8B5A6B;
+    --radius:18px;
+    --shadow: 0 6px 24px rgba(42,46,39,0.08);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px 16px;
+    line-height:1.7;
+  }
+
+  .app{
+    width:100%;
+    max-width:440px;
+  }
+
+  .eyebrow{
+    font-size:13px;
+    letter-spacing:0.08em;
+    color:var(--ink-soft);
+    margin:0 0 6px;
+  }
+
+  h1{
+    font-family:'Zen Old Mincho', serif;
+    font-weight:700;
+    font-size:28px;
+    line-height:1.45;
+    margin:0 0 16px;
+    letter-spacing:0.01em;
+  }
+
+  .lead{
+    font-size:15px;
+    color:var(--ink-soft);
+    margin:0 0 28px;
+  }
+
+  /* --- speech bubble progress signature --- */
+  .bubble-wrap{
+    width:160px;
+    margin:0 auto 28px;
+    position:relative;
+  }
+  .bubble-wrap svg{ display:block; width:100%; height:auto; }
+  .bubble-outline{
+    fill:none;
+    stroke:var(--ink);
+    stroke-width:3;
+  }
+  .bubble-fill{
+    fill:var(--accent2);
+    transition:transform 0.5s cubic-bezier(.4,0,.2,1);
+    transform-origin:bottom;
+  }
+  .bubble-label{
+    text-align:center;
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-top:-4px;
+  }
+
+  .card{
+    background:var(--paper-soft);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:28px 24px;
+    box-shadow:var(--shadow);
+  }
+
+  .screen{ display:none; }
+  .screen.active{ display:block; animation:fadeUp .45s ease both; }
+
+  @media (prefers-reduced-motion: reduce){
+    .screen.active{ animation:none; }
+    .bubble-fill{ transition:none; }
+  }
+
+  @keyframes fadeUp{
+    from{ opacity:0; transform:translateY(10px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  button{
+    font-family:inherit;
+    cursor:pointer;
+  }
+
+  .btn-primary{
+    display:block;
+    width:100%;
+    background:var(--ink);
+    color:var(--paper-soft);
+    border:none;
+    border-radius:999px;
+    padding:16px 20px;
+    font-size:15px;
+    font-weight:700;
+    letter-spacing:0.02em;
+    margin-top:8px;
+  }
+  .btn-primary:hover{ background:var(--accent2-dark); }
+  .btn-primary:focus-visible{ outline:3px solid var(--accent); outline-offset:2px; }
+
+  .btn-secondary{
+    display:block;
+    width:100%;
+    background:transparent;
+    color:var(--ink);
+    border:1.5px solid var(--line);
+    border-radius:999px;
+    padding:14px 20px;
+    font-size:14px;
+    font-weight:500;
+    margin-top:10px;
+  }
+  .btn-secondary:hover{ border-color:var(--ink); }
+  .btn-secondary:focus-visible{ outline:3px solid var(--accent); outline-offset:2px; }
+
+  .q-count{
+    font-size:13px;
+    color:var(--ink-soft);
+    text-align:center;
+    margin-bottom:18px;
+  }
+
+  .q-text{
+    font-family:'Zen Old Mincho', serif;
+    font-size:19px;
+    font-weight:500;
+    line-height:1.6;
+    margin:0 0 22px;
+  }
+
+  .option{
+    display:block;
+    width:100%;
+    text-align:left;
+    background:#fff;
+    border:1.5px solid var(--line);
+    border-radius:14px;
+    padding:14px 16px;
+    font-size:14.5px;
+    color:var(--ink);
+    margin-bottom:10px;
+    transition:border-color .2s, background .2s;
+  }
+  .option:hover{ border-color:var(--accent2); background:#FAFBF6; }
+  .option:focus-visible{ outline:3px solid var(--accent); outline-offset:2px; }
+
+  .type-tag{
+    display:inline-block;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:0.06em;
+    color:#fff;
+    padding:5px 12px;
+    border-radius:999px;
+    margin-bottom:14px;
+  }
+
+  .result-title{
+    font-family:'Zen Old Mincho', serif;
+    font-size:24px;
+    font-weight:700;
+    margin:0 0 14px;
+    line-height:1.5;
+  }
+
+  .result-comment{
+    font-size:14.5px;
+    color:var(--ink-soft);
+    margin:0 0 22px;
+  }
+
+  .tip-heading{
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:0.04em;
+    color:var(--ink-soft);
+    margin:0 0 10px;
+  }
+
+  .tip-list{
+    list-style:none;
+    margin:0 0 22px;
+    padding:0;
+  }
+  .tip-list li{
+    position:relative;
+    padding-left:26px;
+    margin-bottom:10px;
+    font-size:14.5px;
+  }
+  .tip-list li::before{
+    content:"→";
+    position:absolute;
+    left:0;
+    color:var(--accent2);
+    font-weight:700;
+  }
+
+  .tsukkomi{
+    font-size:13.5px;
+    color:var(--ink-soft);
+    background:var(--paper);
+    border-radius:12px;
+    padding:14px 16px;
+    margin-bottom:22px;
+  }
+
+  .copy-feedback{
+    font-size:12.5px;
+    color:var(--accent2-dark);
+    text-align:center;
+    margin-top:8px;
+    min-height:16px;
+  }
+
+  footer{
+    text-align:center;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-top:18px;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- HERO -->
+  <section id="screen-hero" class="screen active">
+    <div class="bubble-wrap">
+      <svg viewBox="0 0 200 160" aria-hidden="true">
+        <defs>
+          <clipPath id="bubbleClip">
+            <path d="M30,10 H170 Q190,10 190,30 V110 Q190,130 170,130 H60 L40,155 L45,130 H30 Q10,130 10,110 V30 Q10,10 30,10 Z"/>
+          </clipPath>
+        </defs>
+        <rect id="bubbleFill" class="bubble-fill" x="0" y="160" width="200" height="160" clip-path="url(#bubbleClip)" style="transform:scaleY(0.05)"/>
+        <path class="bubble-outline" d="M30,10 H170 Q190,10 190,30 V110 Q190,130 170,130 H60 L40,155 L45,130 H30 Q10,130 10,110 V30 Q10,10 30,10 Z"/>
+      </svg>
+    </div>
+    <p class="eyebrow">AI × 暮らし　簡易診断</p>
+    <h1>ChatGPT使い方<br>レベル診断</h1>
+    <p class="lead">あなたは普段、ChatGPTとどんな距離感で付き合っていますか？8つの質問で、いまの使い方タイプと「次の一歩」のヒントがわかります。所要時間は1分ほどです。</p>
+    <div class="card">
+      <p style="margin:0 0 4px;font-size:14px;color:var(--ink-soft);">こんな人におすすめ</p>
+      <p style="margin:0;font-size:14.5px;">なんとなく使っているけど、もっと使いこなしたいと感じている方へ。</p>
+    </div>
+    <button class="btn-primary" onclick="startQuiz()">診断をはじめる →</button>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="screen-quiz" class="screen">
+    <div class="bubble-wrap" style="width:110px;">
+      <svg viewBox="0 0 200 160" aria-hidden="true">
+        <rect id="bubbleFillQuiz" class="bubble-fill" x="0" y="160" width="200" height="160" clip-path="url(#bubbleClip)" style="transform:scaleY(0.05)"/>
+        <path class="bubble-outline" d="M30,10 H170 Q190,10 190,30 V110 Q190,130 170,130 H60 L40,155 L45,130 H30 Q10,130 10,110 V30 Q10,10 30,10 Z"/>
+      </svg>
+    </div>
+    <p class="q-count" id="qCount">質問 1 / 8</p>
+    <p class="q-text" id="qText"></p>
+    <div id="qOptions"></div>
+  </section>
+
+  <!-- RESULT -->
+  <section id="screen-result" class="screen">
+    <span class="type-tag" id="resultTag"></span>
+    <h2 class="result-title" id="resultTitle"></h2>
+    <p class="result-comment" id="resultComment"></p>
+    <p class="tip-heading">次の一歩のヒント</p>
+    <ul class="tip-list" id="resultTips"></ul>
+    <div class="tsukkomi" id="resultTsukkomi"></div>
+    <button class="btn-secondary" id="copyBtn" onclick="copyResult()">結果をコピーする</button>
+    <p class="copy-feedback" id="copyFeedback"></p>
+    <button class="btn-secondary" onclick="restartQuiz()">もう一度診断する</button>
+  </section>
+
+  <footer>※この診断は簡易的な傾向の目安です。タイプに優劣はありません。</footer>
+</div>
+
+<script>
+  const questions = [
+    {
+      text: "ChatGPTを使うのはどんな時が多い？",
+      options: [
+        { label: "ちょっと気になったことをパッと調べたい時", type: "s" },
+        { label: "文章作成や要約をお願いしたい時", type: "d" },
+        { label: "考えがまとまらない時に、相談しながら整理したい時", type: "w" },
+        { label: "仕事や作業の一部をAIと一緒に組み立てたい時", type: "k" }
+      ]
+    },
+    {
+      text: "質問の仕方は？",
+      options: [
+        { label: "思いついたことをそのまま聞く", type: "s" },
+        { label: "「〇〇を300字でまとめて」など具体的にお願いする", type: "d" },
+        { label: "答えに対して「もっとこうして」とやりとりを重ねる", type: "w" },
+        { label: "役割や条件を細かく指定してから聞く（例：あなたは編集者です）", type: "k" }
+      ]
+    },
+    {
+      text: "返ってきた答えにいまいち納得いかなかったら？",
+      options: [
+        { label: "そういうものかと受け入れる", type: "s" },
+        { label: "別の聞き方で聞き直す", type: "d" },
+        { label: "「なんでそう思ったの？」と理由を聞き返す", type: "w" },
+        { label: "プロンプトそのものを修正して再設計する", type: "k" }
+      ]
+    },
+    {
+      text: "ChatGPTのメモリ機能（過去の会話を覚えている機能）について",
+      options: [
+        { label: "知らない・意識したことがない", type: "s" },
+        { label: "なんとなく知っているが特に使っていない", type: "d" },
+        { label: "たまに「前に話したこと覚えてる？」と聞くことがある", type: "w" },
+        { label: "オン・オフを意図的に使い分けている", type: "k" }
+      ]
+    },
+    {
+      text: "カスタムGPTや「カスタム指示」機能は？",
+      options: [
+        { label: "聞いたことがない", type: "s" },
+        { label: "名前は知っているが使ったことはない", type: "d" },
+        { label: "試したことはある", type: "w" },
+        { label: "自分用にカスタマイズして日常的に使っている", type: "k" }
+      ]
+    },
+    {
+      text: "1回のやりとりで終わる？それとも続く？",
+      options: [
+        { label: "基本、一問一答で終わる", type: "s" },
+        { label: "2〜3回くらいやりとりすることが多い", type: "d" },
+        { label: "テーマによっては長く対話が続く", type: "w" },
+        { label: "複数ステップに分けて、目的まで導くことが多い", type: "k" }
+      ]
+    },
+    {
+      text: "友達にChatGPTの使い方を聞かれたら、なんと答える？",
+      options: [
+        { label: "「ググる感覚で使えばいいよ」", type: "s" },
+        { label: "「文章作るのがめっちゃ楽になるよ」", type: "d" },
+        { label: "「壁打ち相手にすると考えが整理されるよ」", type: "w" },
+        { label: "「プロンプト次第で全然違う子になるよ」", type: "k" }
+      ]
+    },
+    {
+      text: "ChatGPTとの関係を一言でいうと？",
+      options: [
+        { label: "便利な検索ツール", type: "s" },
+        { label: "頼れるアシスタント", type: "d" },
+        { label: "話し相手・思考の相棒", type: "w" },
+        { label: "育てて使う、仕事道具のような相棒", type: "k" }
+      ]
+    }
+  ];
+
+  const results = {
+    s: {
+      tag: "検索代わりさんタイプ",
+      color: "var(--type-s)",
+      title: "あなたは「検索代わりさん」タイプ",
+      comment: "ChatGPTを「物知りな友達」くらいの距離感で使っているタイプ。それはそれで十分便利ですが、実はもっと頼れる相棒になれる子です。",
+      tips: [
+        "「あなたは〇〇です」と役割を与えてみる（例：あなたはプロの編集者です）",
+        "一度の回答で終わらせず、「もう少し詳しく」と聞き返してみる",
+        "答えが微妙だったら「なぜそう思ったの？」と理由を聞いてみる"
+      ],
+      tsukkomi: "正直、ググるのとあまり変わらない使い方かも……？　ちょっともったいないかもしれません。"
+    },
+    d: {
+      tag: "お願い上手さんタイプ",
+      color: "var(--type-d)",
+      title: "あなたは「お願い上手さん」タイプ",
+      comment: "「〇〇して」とお願いするのが上手なタイプ。アシスタントとしてはしっかり使いこなせています。",
+      tips: [
+        "一回のお願いで満足せず、何度かやりとりして精度を上げてみる",
+        "「なぜその答えにしたの？」と理由を聞いて、思考の癖を知る",
+        "カスタム指示を設定して、毎回の前置きを省略してみる"
+      ],
+      tsukkomi: "便利に使えているけど、まだ「言われたことしかしない部下」止まりかもしれません。"
+    },
+    w: {
+      tag: "壁打ち仲間タイプ",
+      color: "var(--type-w)",
+      title: "あなたは「壁打ち仲間」タイプ",
+      comment: "対話を重ねながら考えを深められる、かなり良い距離感のタイプ。思考整理の相棒としてしっかり活用できています。",
+      tips: [
+        "メモリやカスタム指示で「育てる」視点を持ってみる",
+        "同じテーマを複数回に分けて、少しずつ深掘りしてみる",
+        "出てきたアイデアを「次の行動」に落とし込む質問をしてみる"
+      ],
+      tsukkomi: "話し相手としてはかなり優秀。あとは「使い倒す」段階に行けるかどうかです。"
+    },
+    k: {
+      tag: "使いこなし職人タイプ",
+      color: "var(--type-k)",
+      title: "あなたは「使いこなし職人」タイプ",
+      comment: "プロンプト設計や機能活用が板についている上級者タイプ。すでに自分なりの「育て方」を持っています。",
+      tips: [
+        "複数ステップのワークフローをテンプレート化してみる",
+        "自作のカスタムGPTを作って、特定タスク専用に育ててみる",
+        "たまには初心に戻って、シンプルな聞き方も試してみる"
+      ],
+      tsukkomi: "十分使いこなせていますが、油断すると「過剰最適化沼」にハマりやすいタイプでもあります。"
+    }
+  };
+
+  let currentQ = 0;
+  let scores = { s:0, d:0, w:0, k:0 };
+
+  function showScreen(id){
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function setBubbleFill(el, ratio){
+    const r = Math.max(0.05, Math.min(1, ratio));
+    el.style.transform = 'scaleY(' + r + ')';
+  }
+
+  function startQuiz(){
+    currentQ = 0;
+    scores = { s:0, d:0, w:0, k:0 };
+    showScreen('screen-quiz');
+    renderQuestion();
+  }
+
+  function renderQuestion(){
+    const q = questions[currentQ];
+    document.getElementById('qCount').textContent = `質問 ${currentQ + 1} / ${questions.length}`;
+    document.getElementById('qText').textContent = q.text;
+    setBubbleFill(document.getElementById('bubbleFillQuiz'), currentQ / questions.length);
+
+    const optionsEl = document.getElementById('qOptions');
+    optionsEl.innerHTML = '';
+    q.options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'option';
+      btn.textContent = opt.label;
+      btn.onclick = () => selectOption(opt.type);
+      optionsEl.appendChild(btn);
+    });
+  }
+
+  function selectOption(type){
+    scores[type]++;
+    currentQ++;
+    if(currentQ < questions.length){
+      renderQuestion();
+    } else {
+      setBubbleFill(document.getElementById('bubbleFillQuiz'), 1);
+      setTimeout(showResult, 350);
+    }
+  }
+
+  function showResult(){
+    let topType = 's';
+    let topScore = -1;
+    ['s','d','w','k'].forEach(t => {
+      if(scores[t] > topScore){ topScore = scores[t]; topType = t; }
+    });
+
+    const r = results[topType];
+    const tag = document.getElementById('resultTag');
+    tag.textContent = r.tag;
+    tag.style.background = r.color;
+
+    document.getElementById('resultTitle').textContent = r.title;
+    document.getElementById('resultComment').textContent = r.comment;
+
+    const tipsEl = document.getElementById('resultTips');
+    tipsEl.innerHTML = '';
+    r.tips.forEach(tip => {
+      const li = document.createElement('li');
+      li.textContent = tip;
+      tipsEl.appendChild(li);
+    });
+
+    document.getElementById('resultTsukkomi').textContent = r.tsukkomi;
+    document.getElementById('copyFeedback').textContent = '';
+
+    showScreen('screen-result');
+  }
+
+  function copyResult(){
+    let topType = 's';
+    let topScore = -1;
+    ['s','d','w','k'].forEach(t => {
+      if(scores[t] > topScore){ topScore = scores[t]; topType = t; }
+    });
+    const r = results[topType];
+    const text = `【ChatGPT使い方レベル診断】\n私は「${r.tag}」でした。\n${r.comment}`;
+
+    const feedback = document.getElementById('copyFeedback');
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(() => {
+        feedback.textContent = 'コピーしました';
+      }).catch(() => {
+        feedback.textContent = 'コピーできませんでした';
+      });
+    } else {
+      feedback.textContent = 'お使いの環境ではコピーできません';
+    }
+  }
+
+  function restartQuiz(){
+    startQuiz();
+  }
+</script>
+
+</body>
+</html>
